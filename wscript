@@ -10,8 +10,15 @@ def configure(conf):
 
 def build(bld):
     bld(
-        "Installing NodeJS Modules",
-        rule="${NPM} install -g --prefix ${TGT} ..",
+        "nodejs",
+        rule="cp ${SRC} . && ${NPM} install --include=dev ",
         source="package.json",
-        target="vendor_nodejs",
+    )
+
+    bld(
+        "Bundle",
+        rule="npx webpack --entry ${SRC} -o . --output-filename ${TGT} --mode production",
+        source="js/adjustments.js",
+        target="bundle/dist.js",
+        depends_on="nodejs",
     )

@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "description": "Random Go Games",
   "type": "module",
-  "main": "./src/main.js",
   "license": "MIT",
   "peerDependencies": {
     "preact": "^8.4.2 || 10.x"
@@ -17,7 +16,7 @@
     "onchange": "^7.1.0",
     "preact": "^10.5.14",
     "prettier": "^2.7.1",
-    "webpack": "^5.52.0",
+    "webpack": "^5.95.0",
     "webpack-cli": "^4.8.0"
   },
   "scripts": {
