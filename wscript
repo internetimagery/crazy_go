@@ -29,8 +29,9 @@ def build(bld):
     # node_modules added as dependency to force packs to build first
     bld(
         "bundle",
-        rule="npm exec webpack build -- --entry ${SRC[2]} --config ${SRC[1]} --stats-error-details -o . --output-filename ${TGT} --mode production",
-        source=["node_modules", "webpack.config.js", "js/main.js"],
+        rule="npm exec webpack build -- --entry ${SRC[1]} --config ${SRC[0]} --stats-error-details -o . --output-filename ${TGT} --mode development",
+        #rule="npm exec webpack build -- --entry ${SRC[1]} --config ${SRC[0]} --stats-error-details -o . --output-filename ${TGT} --mode development",
+        source=["webpack.config.js", "js/main.js"],
         target="bundle/dist.js",
     )
 

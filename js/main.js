@@ -1,177 +1,19 @@
 import { h, render, Component } from "preact";
-import Board from "@sabaki/go-board";
+import GoBoard from "@sabaki/go-board";
 import { Goban } from "@sabaki/shudan";
+import "@sabaki/shudan/css/goban.css";
 
-const chineseCoord = [
-  "一",
-  "二",
-  "三",
-  "四",
-  "五",
-  "六",
-  "七",
-  "八",
-  "九",
-  "十",
-  "十一",
-  "十二",
-  "十三",
-  "十四",
-  "十五",
-  "十六",
-  "十七",
-  "十八",
-  "十九",
-];
 
-const signMap = [
-  [0, 0, 0, -1, -1, -1, 1, 0, 1, 1, -1, -1, 0, -1, 0, -1, -1, 1, 0],
-  [0, 0, -1, 0, -1, 1, 1, 1, 0, 1, -1, 0, -1, -1, -1, -1, 1, 1, 0],
-  [0, 0, -1, -1, -1, 1, 1, 0, 0, 1, 1, -1, -1, 1, -1, 1, 0, 1, 0],
-  [0, 0, 0, 0, -1, -1, 1, 0, 1, -1, 1, 1, 1, 1, 1, 0, 1, 0, 0],
-  [0, 0, 0, 0, -1, 0, -1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0],
-  [0, 0, -1, 0, 0, -1, -1, 1, 0, -1, -1, 1, -1, -1, 0, 1, 0, 0, 1],
-  [0, 0, 0, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, 1],
-  [0, 0, -1, 1, 1, 0, 1, -1, -1, 1, 0, 1, -1, 0, 1, -1, -1, -1, 1],
-  [0, 0, -1, -1, 1, 1, 1, 0, -1, 1, -1, -1, 0, -1, -1, 1, 1, 1, 1],
-  [0, 0, -1, 1, 1, -1, -1, -1, -1, 1, 1, 1, -1, -1, -1, -1, 1, -1, -1],
-  [-1, -1, -1, -1, 1, 1, 1, -1, 0, -1, 1, -1, -1, 0, -1, 1, 1, -1, 0],
-  [-1, 1, -1, 0, -1, -1, -1, -1, -1, -1, 1, -1, 0, -1, -1, 1, -1, 0, -1],
-  [1, 1, 1, 1, -1, 1, 1, 1, -1, 1, 0, 1, -1, 0, -1, 1, -1, -1, 0],
-  [0, 1, -1, 1, 1, -1, -1, 1, -1, 1, 1, 1, -1, 1, -1, 1, 1, -1, 1],
-  [0, 0, -1, 1, 0, 0, 1, 1, -1, -1, 0, 1, -1, 1, -1, 1, -1, 0, -1],
-  [0, 0, 1, 0, 1, 0, 1, 1, 1, -1, -1, 1, -1, -1, 1, -1, -1, -1, 0],
-  [0, 0, 0, 0, 1, 1, 0, 1, -1, 0, -1, -1, 1, 1, 1, 1, -1, -1, -1],
-  [0, 0, 1, 1, -1, 1, 1, -1, 0, -1, -1, 1, 1, 1, 1, 0, 1, -1, 1],
-  [0, 0, 0, 1, -1, -1, -1, -1, -1, 0, -1, -1, 1, 1, 0, 1, 1, 1, 0],
-];
+function toInt(character) {
+    return character.charCodeAt()-97;
+}
 
-const paintMap = [
-  [-1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, 1, 1],
-  [-1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, 1, 1, 1],
-  [-1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, 1, -1, 1, 1, 1, 1],
-  [-1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [-1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1],
-  [-1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, 0, 1, 1, 1, 1],
-  [-1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, 1],
-  [-1, -1, -1, 1, 1, 1, 1, -1, -1, 1, 0, 1, -1, -1, -1, -1, -1, -1, 1],
-  [-1, -1, -1, -1, 1, 1, 1, 0, -1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1],
-  [-1, -1, -1, 1, 1, -1, -1, -1, -1, 1, 1, 1, -1, -1, -1, -1, 1, -1, -1],
-  [-1, -1, -1, -1, 1, 1, 1, -1, -1, -1, 1, -1, -1, -1, -1, 1, 1, -1, -1],
-  [-1, 1, -1, 0, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1],
-  [1, 1, 1, 1, -1, 1, 1, 1, -1, 1, 1, 1, -1, -1, -1, 1, -1, -1, -1],
-  [1, 1, 1, 1, 1, 1, 1, 1, -1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1],
-  [1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 0, 1, -1, -1, -1, 1, -1, -1, -1],
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, 1, -1, -1, -1, -1],
-  [1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1, -1],
-  [1, 1, 1, 1, -1, 1, 1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, 1],
-  [1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1],
-].map((row) => row.map((sign) => ((Math.random() * 2 + 1) / 3) * sign));
+function toChar(number) {
+    return String.fromCharCode(number+97);
+}
 
-const heatMap = (() => {
-  let _ = null;
-  let O = (strength, text) => ({ strength, text });
-  let O1 = O(1, "20%\n111");
-  let O5 = O(5, "67%\n2315");
-  let O9 = O(9, "80%\n13.5k");
-
-  return [
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, O(7), O9, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, O(3), _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, O(2), _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, O1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, O5, O(4), _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-  ];
-})();
-
-const markerMap = (() => {
-  let _ = null;
-  let O = { type: "circle" };
-  let X = { type: "cross" };
-  let T = { type: "triangle" };
-  let Q = { type: "square" };
-  let $ = { type: "point" };
-  let S = { type: "loader" };
-  let L = (label) => ({ type: "label", label });
-  let A = L("a");
-  let B = L("b");
-  let C = L("c");
-  let longLabel = L("Long\nlabel with linebreak");
-
-  return [
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, O, O, O, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, X, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, X, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, X, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, T, T, T, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, $, $, $, _, _, _, _, _, _, _, _, _, _, _, S, S, S, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, Q, _, _, _, _, _, _, _, _, _, longLabel],
-    [_, _, _, _, _, _, _, _, Q, _, _, _, _, _, _, _, _, _, C],
-    [_, _, _, _, _, _, _, _, Q, _, _, _, _, _, _, _, _, _, B],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, A],
-  ];
-})();
-
-const ghostStoneMap = (() => {
-  let _ = null;
-  let O = (t) => ({ sign: -1, type: t });
-  let X = (t) => ({ sign: 1, type: t });
-  let o = (t) => ({ sign: -1, type: t, faint: true });
-  let x = (t) => ({ sign: 1, type: t, faint: true });
-  let [Xg, xg] = [X, x].map((f) => f("good"));
-  let [Xb, xb] = [X, x].map((f) => f("bad"));
-  let [Xi, xi] = [X, x].map((f) => f("interesting"));
-  let [Xd, xd] = [X, x].map((f) => f("doubtful"));
-
-  return [
-    [X(), x(), _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [O(), o(), _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [Xg, xg, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [Xi, xi, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [Xd, xd, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [Xb, xb, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
-  ];
-})();
-
-const createTwoWayCheckBox =
-  (component) =>
-  ({ stateKey, text }) =>
+function createTwoWayCheckBox(component) {
+  return ({ stateKey, text }) =>
     h(
       "label",
       {
@@ -192,48 +34,184 @@ const createTwoWayCheckBox =
 
       h("span", { style: { userSelect: "none" } }, text)
     );
+}
 
 class App extends Component {
   constructor(props) {
     super(props);
 
+    var boardSize = 9;
+    var maxPlayers = 2;
+    var gamemode = 1;
+    var hash = window.location.hash.substring(1);
+    if (hash) {
+	boardSize = toInt(hash[0]);
+	gamemode = toInt(hash[1]) >= 10 ? 1 : 0;
+	var maxPlayers = toInt(hash[1]) - (gamemode ? 10 : 0);
+    } else {
+	window.location.hash = "#" + toChar(boardSize) + toChar(maxPlayers + (gamemode ? 10 : 0));
+    }
+
     this.state = {
-      board: new Board(signMap),
+      board: GoBoard.fromDimensions(boardSize),
+      boardSize,
       vertexSize: 24,
       showCoordinates: false,
-      alternateCoordinates: false,
-      showCorner: false,
-      showDimmedStones: false,
-      fuzzyStonePlacement: false,
-      animateStonePlacement: false,
-      showPaintMap: false,
-      showHeatMap: false,
-      showMarkerMap: false,
-      showGhostStones: false,
-      showLines: false,
-      showSelection: false,
+      fuzzyStonePlacement: true,
+      animateStonePlacement: true,
       isBusy: false,
+      players: maxPlayers,
+      gamemode,
     };
 
     this.CheckBox = createTwoWayCheckBox(this);
+
+    for (let [i, move] of (hash.substring(2).match(/[\-a-z]{3}/g) || []).entries()) {
+	let player = toInt(move[0]) - 10;
+	if (move != "--") {
+		let vtx = [toInt(move[1]), toInt(move[2])];
+		let {note, newBoard, captures} = this.move(this.state.board, player+1, vtx, gamemode);
+		this.setState({ board: newBoard });
+	}
+    }
+  }
+
+  getNeighbors(board, vertex) {
+    var neighbours = board.getNeighbors(vertex);
+
+    if (this.state.gamemode) {
+      // Normal game mode
+      return neighbours;
+    }
+
+    // Borderless game mode. Neighbors cross the boundary between sides.
+	if (vertex[0] == 0) {
+	  neighbours.push([board.width-1, vertex[1]]);
+	}
+	if (vertex[1] == 0) {
+	  neighbours.push([vertex[0], board.height-1]);
+	}
+	if (vertex[0] == board.width-1) {
+	  neighbours.push([0, vertex[1]]);
+	}
+	if (vertex[1] == board.height-1) {
+	  neighbours.push([vertex[0], 0]);
+	}
+
+      return neighbours;
+  }
+
+  getChain(board, vertex, player) {
+	var chain = [];
+	var value = board.get(vertex);
+	if (!value) {
+  	  return chain;
+	}
+
+	const isPlayer = value === player;
+	var seen = new Set();
+	var queue = [vertex];
+	while (queue.length) {
+	  let vtx = queue.pop();
+	  let id = vtx.toString();
+	  if (seen.has(id)) {
+	    continue;
+	  }
+          seen.add(id);
+
+	  let val = board.get(vtx);
+	  if (!val) {
+	    continue;
+	  }
+
+	  // If isPlayer then we want only colours of that player.
+          // Else we want any other colour that is not that player.
+	  if ( (isPlayer && val !== player) || (!isPlayer && val === player) ) {
+		  continue;
+	  }
+	  chain.push(vtx);
+          for (let neighbour of this.getNeighbors(board, vtx)) {
+	    queue.push(neighbour);
+	  }
+	}
+
+	return chain;
+  }
+
+  move(board, sign, vertex) {
+    var newBoard = board;
+    var captures = 0;
+    var note = "";
+
+    if (sign && board.get(vertex)) {
+	note = "Illegal move: stone exists";
+	return {note, newBoard, captures}
+    }
+
+    if (!sign) {
+	newBoard = board.set(vertex, 0);
+	return {note, newBoard, captures};
+    }
+
+    newBoard = newBoard.set(vertex, sign);
+
+    var toRemove = [];
+    var playLiberties = 0;
+    for (let neighbour of this.getNeighbors(newBoard, vertex)) {
+	let value = newBoard.get(neighbour);
+	if (!value || value === sign) {
+	    playLiberties ++;
+	    continue;
+	}
+        let chain = this.getChain(newBoard, neighbour, sign);
+	let liberties = 0;
+	for (let vtx of chain) {
+	    for (let space of this.getNeighbors(newBoard, vtx)) {
+		if (!board.get(space)) {
+		   liberties ++;
+		}
+	    }
+	}
+	if (!liberties) {
+	    for (let vtx of chain) {
+		toRemove.push(vtx);
+	    }
+	}
+    }
+
+    if (!toRemove.length && !playLiberties) {
+	note = "Illegal move: self capture";
+	newBoard = newBoard.set(vertex, 0);
+	return {note, newBoard, captures}
+    }
+
+
+    // Capture
+    for (let vtx of toRemove) {
+      newBoard = newBoard.set(vtx, 0);
+      captures ++;
+    }
+    return {note, newBoard, captures};
   }
 
   render() {
     let {
       vertexSize,
       showCoordinates,
-      alternateCoordinates,
-      showCorner,
-      showDimmedStones,
       fuzzyStonePlacement,
       animateStonePlacement,
-      showPaintMap,
-      showHeatMap,
-      showMarkerMap,
-      showGhostStones,
-      showLines,
-      showSelection,
+      players,
+      boardSize,
+      gamemode,
     } = this.state;
+
+    let hash = window.location.hash;
+    if (hash.length < 4) {
+	window.location.hash = "#" + toChar(boardSize) + toChar(players + (gamemode ? 10 : 0));
+	if (boardSize != this.state.board.width) {
+            this.setState({ board: GoBoard.fromDimensions(boardSize) });
+	}
+    }
 
     return h(
       "section",
@@ -257,7 +235,7 @@ class App extends Component {
         h(
           "p",
           { style: { margin: "0 0 .5em 0" } },
-          "Size: ",
+          "Zoom: ",
 
           h(
             "button",
@@ -301,7 +279,21 @@ class App extends Component {
         h(
           "p",
           { style: { margin: "0 0 .5em 0" } },
-          "Stones: ",
+          "Players: ",
+
+          h(
+            "button",
+            {
+              type: "button",
+              onClick: (evt) => {
+                this.setState((s) => ({
+                  players: Math.max(s.players - 1, 2),
+                }));
+              },
+            },
+            "-"
+          ),
+          " ",
 
           h(
             "button",
@@ -309,47 +301,96 @@ class App extends Component {
               type: "button",
               title: "Reset",
               onClick: (evt) => {
-                this.setState({ board: new Board(signMap) });
+                this.setState((s) => ({
+		  players: toInt(window.location.hash[2]),
+		}));
               },
             },
-            "•"
+	    players,
+          ),
+          " ",
+
+          h(
+            "button",
+            {
+              type: "button",
+              onClick: (evt) => {
+                this.setState((s) => ({ players: Math.min(s.players + 1, 6), }));
+              },
+            },
+            "+"
           )
+        ),
+        h(
+          "p",
+          { style: { margin: "0 0 .5em 0" } },
+          "Board Size: ",
+
+          h(
+            "button",
+            {
+              type: "button",
+              onClick: (evt) => {
+                this.setState((s) => ({
+                  boardSize: Math.max(s.boardSize - 1, 4),
+                }));
+              },
+            },
+            "-"
+          ),
+          " ",
+
+          h(
+            "button",
+            {
+              type: "button",
+              title: "Reset",
+              onClick: (evt) => {
+                this.setState((s) => ({
+		  boardSize: toInt(window.location.hash[1]),
+		}));
+              },
+            },
+	    boardSize,
+          ),
+          " ",
+
+          h(
+            "button",
+            {
+              type: "button",
+              onClick: (evt) => {
+                this.setState((s) => ({ boardSize: Math.min(s.boardSize + 1, 19), }));
+              },
+            },
+            "+"
+          )
+        ),
+
+        h(
+          "p",
+          { style: { margin: "0 0 .5em 0" } },
+          "Game Mode: ",
+
+          h(
+            "button",
+            {
+              type: "button",
+              onClick: (evt) => {
+                this.setState((s) => ({
+		    gamemode: s.gamemode ? 0 : 1,
+                }));
+              },
+            },
+            gamemode ? "Normal" : "Borderless",
+          ),
+          " ",
         ),
 
         h(this.CheckBox, {
           stateKey: "showCoordinates",
           text: "Show coordinates",
         }),
-        h(this.CheckBox, {
-          stateKey: "alternateCoordinates",
-          text: "Alternate coordinates",
-        }),
-        h(this.CheckBox, {
-          stateKey: "showCorner",
-          text: "Show lower right corner only",
-        }),
-        h(this.CheckBox, {
-          stateKey: "showDimmedStones",
-          text: "Dim dead stones",
-        }),
-        h(this.CheckBox, {
-          stateKey: "fuzzyStonePlacement",
-          text: "Fuzzy stone placement",
-        }),
-        h(this.CheckBox, {
-          stateKey: "animateStonePlacement",
-          text: "Animate stone placement",
-        }),
-        h(this.CheckBox, { stateKey: "showMarkerMap", text: "Show markers" }),
-        h(this.CheckBox, {
-          stateKey: "showGhostStones",
-          text: "Show ghost stones",
-        }),
-        h(this.CheckBox, { stateKey: "showPaintMap", text: "Show paint map" }),
-        h(this.CheckBox, { stateKey: "showHeatMap", text: "Show heat map" }),
-        h(this.CheckBox, { stateKey: "showLines", text: "Show lines" }),
-        h(this.CheckBox, { stateKey: "showSelection", text: "Show selection" }),
-        h(this.CheckBox, { stateKey: "isBusy", text: "Busy" })
       ),
 
       h(
@@ -360,76 +401,42 @@ class App extends Component {
             onContextMenu: (evt) => evt.preventDefault(),
           },
 
-          vertexSize,
+	  vertexSize,
           animate: true,
-          busy: this.state.isBusy,
-          rangeX: showCorner ? [8, 18] : undefined,
-          rangeY: showCorner ? [12, 18] : undefined,
-          coordX: alternateCoordinates ? (i) => chineseCoord[i] : undefined,
-          coordY: alternateCoordinates ? (i) => i + 1 : undefined,
 
           signMap: this.state.board.signMap,
           showCoordinates,
-          fuzzyStonePlacement,
-          animateStonePlacement,
-          paintMap: showPaintMap && paintMap,
-          heatMap: showHeatMap && heatMap,
-          markerMap: showMarkerMap && markerMap,
-          ghostStoneMap: showGhostStones && ghostStoneMap,
+          fuzzyStonePlacement:true,
+          animateStonePlacement:true,
 
-          lines: showLines
-            ? [
-                { type: "line", v1: [15, 6], v2: [12, 15] },
-                { type: "arrow", v1: [10, 4], v2: [5, 7] },
-              ]
-            : [],
+          onVertexMouseUp: (evt, vertex) => {
+	    if (evt.button !== 0) {
+		return;
+	    }
+	    let players = toInt(window.location.hash[2]);
+	    let gamemode = players >= 10 ? 1 : 0;
+	    let moves = window.location.hash.substring(3);
+	    let player = moves.length ? toInt(moves[moves.length - 3]) - 10 : -1;
 
-          dimmedVertices: showDimmedStones
-            ? [
-                [2, 14],
-                [2, 13],
-                [5, 13],
-                [6, 13],
-                [9, 3],
-                [9, 5],
-                [10, 5],
-                [14, 7],
-                [13, 13],
-                [13, 14],
-                [18, 13],
-              ]
-            : [],
-
-          selectedVertices: showSelection
-            ? [
-                [8, 7],
-                [9, 7],
-                [9, 8],
-                [10, 7],
-                [10, 8],
-              ]
-            : [],
-
-          onVertexMouseUp: (evt, [x, y]) => {
-            let sign = evt.button === 0 ? 1 : -1;
-            let newBoard = this.state.board.makeMove(sign, [x, y]);
-
+	    player ++;
+	    if (player >= this.state.players) {
+	        player = 0;
+	    }
+            let {note, newBoard, captures} = this.move(this.state.board, player+1, vertex, gamemode);
+	    if (note) {
+		alert(note);
+		return;
+	    }
+	    if (captures) {
+	        console.log(captures);
+	    }
             this.setState({ board: newBoard });
+	    window.location.hash += toChar(player+10) + toChar(vertex[0]) + toChar(vertex[1]);
           },
         }),
-
-        alternateCoordinates &&
-          h(
-            "style",
-            {},
-            `.shudan-coordx span {
-                font-size: .45em;
-            }`
-          )
       )
     );
   }
 }
 
 render(h(App), document.getElementById("root"));
-
