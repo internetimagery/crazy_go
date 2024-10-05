@@ -2,12 +2,12 @@
   "name": "crazy_go",
   "version": "0.0.1",
   "description": "Random Go Games",
-  "type": "module",
   "license": "MIT",
   "peerDependencies": {
     "preact": "^8.4.2 || 10.x"
   },
   "dependencies": {
+    "@sabaki/shudan": "^1.7.1",
     "classnames": "^2.3.1",
     "pkg.json": "^2.0.1"
   },
@@ -20,7 +20,7 @@
     "webpack-cli": "^4.8.0"
   },
   "scripts": {
-    "build-demo": "webpack --entry ./demo/main.js -o ./demo --output-filename bundle.js --progress --mode production",
+    "build-demo": "webpack --entry ./js/main.js -o ./demo --output-filename bundle.js --progress --mode production",
     "watch-demo": "webpack --entry ./demo/main.js -o ./demo --output-filename bundle.js --progress --mode development --watch"
   }
 }
