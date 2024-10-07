@@ -1,6 +1,8 @@
 import { h, render, Component } from "preact";
 import GoBoard from "@sabaki/go-board";
 import { Goban } from "@sabaki/shudan";
+import html2canvas from "html2canvas";
+
 import "@sabaki/shudan/css/goban.css";
 import "../style/main.css";
 
@@ -392,6 +394,33 @@ class App extends Component {
           stateKey: "showCoordinates",
           text: "Show coordinates",
         }),
+        h(
+          "button",
+          {
+            type: "button",
+            onClick: (evt) => {
+              var goban = document.getElementsByClassName("shudan-goban")[0];
+              html2canvas(goban, {
+                  windowWidth: 500,
+                  windowHeight: 500,
+              }).then(canvas => {
+                  let move = window.location.hash.substring(1);
+		  console.log(`<img src="${canvas.toDataURL()}"><hr><code>${move}</code>`);
+
+                  const blob = new Blob(
+                      [`<img src="${canvas.toDataURL()}"><hr><code>${move}</code>`],
+                      {type:"text/html"}
+                  );
+                  navigator.clipboard.write([
+                      new ClipboardItem({
+                          "text/html": blob
+                      })
+                  ]).then( () => {alert("Copied");});
+              });
+            },
+          },
+              "Copy Move",
+        ),
       ),
 
       h(
@@ -441,3 +470,35 @@ class App extends Component {
 }
 
 render(h(App), document.getElementById("root"));
+
+/// ADDITIONAL THINGS
+
+//function loadGameUrl() {
+//    var game = decodeURIComponent(location.hash);
+//    if (game) {
+//        sabaki.loadContent(game.substring(1), "sgf", {suppressAskForSave: true})
+//        .then( () => { sabaki.goToEnd() });
+//    }
+//}
+//sabaki.events.on("ready", loadGameUrl);
+//addEventListener("hashchange", loadGameUrl);
+
+//function copyMove() {
+//    var goban = document.getElementsByClassName("shudan-goban")[0];
+//    html2canvas(goban, {
+//        windowWidth: 500,
+//        windowHeight: 500,
+//    }).then(canvas => {
+//        let move = window.location.hash.substring(1);
+//
+//        const blob = new Blob(
+//            [`<img src="${canvas.toDataURL()}"><hr><code>${move}</code>`],
+//            {type:"text/html"}
+//        );
+//        navigator.clipboard.write([
+//            new ClipboardItem({
+//                "text/html": blob
+//            })
+//        ]).then( () => {alert("Copied");});
+//    });
+//};
