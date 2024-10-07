@@ -6,9 +6,16 @@ def options(opt):
 
 def configure(conf):
     conf.find_program("npm")
+    conf.find_program("pip")
+    #conf.env.PYTHONPATH = "python_modules"
 
 
 def build(bld):
+    #bld(
+    #    rule="${PIP} install --target python_modules -r ${SRC}",
+    #    source="requirements.txt",
+    #    target="python_modules",
+    #)
 
     bld(
         features="subst",
@@ -25,7 +32,7 @@ def build(bld):
     bld(
         "bundle",
         rule="npm exec webpack build -- --entry ${SRC[1]} --config ${SRC[0]} --stats-error-details -o . --output-filename ${TGT} --mode development",
-        source=["webpack.config.js", "js/main.js", "style/main.css"],
+        source=["webpack.config.js", "js/main.js", "css/main.css"],
         target="bundle/dist.js",
     )
     bld(

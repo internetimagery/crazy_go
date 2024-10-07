@@ -4,7 +4,7 @@ import { Goban } from "@sabaki/shudan";
 import html2canvas from "html2canvas-pro";
 
 import "@sabaki/shudan/css/goban.css";
-import "../style/main.css";
+import "../css/main.css";
 
 
 function toInt(character) {
