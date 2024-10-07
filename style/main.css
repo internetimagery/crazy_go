@@ -1,0 +1,39 @@
+
+body {
+  background: white;
+}
+
+.shudan-stone-image {
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  border-radius: 50%;
+}
+
+/* BLACK */
+.shudan-stone-image.shudan-sign_1 {
+  background: radial-gradient(circle at 50% 20%, #666699, #000000);
+}
+/* WHITE */
+.shudan-stone-image.shudan-sign_2 {
+  background: radial-gradient(circle at 50% 20%, #ffffff, #ddddbb);
+}
+/* ORANGE */
+.shudan-stone-image.shudan-sign_3 {
+  background: radial-gradient(circle at 50% 20%, #ff9966, #cc0000);
+}
+/* GREEN */
+.shudan-stone-image.shudan-sign_4 {
+  background: radial-gradient(circle at 50% 20%, #bfff00, #009933);
+}
+/* BLUE */
+.shudan-stone-image.shudan-sign_5 {
+  background: radial-gradient(circle at 50% 20%, #ccffff, #0099cc);
+}
+/* YELLOW */
+.shudan-stone-image.shudan-sign_6 {
+  background: radial-gradient(circle at 50% 20%, #ffff66, #cccc00);
+}
+/* WHITE */
+.shudan-stone-image.shudan-sign_-1 {
+  background: radial-gradient(circle at 50% 20%, #ffffff, #ddddbb);
+}

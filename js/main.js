@@ -2,6 +2,7 @@ import { h, render, Component } from "preact";
 import GoBoard from "@sabaki/go-board";
 import { Goban } from "@sabaki/shudan";
 import "@sabaki/shudan/css/goban.css";
+import "../style/main.css";
 
 
 function toInt(character) {
