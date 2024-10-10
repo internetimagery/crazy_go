@@ -10,6 +10,9 @@ import __sabaki.go__board as GoBoard
 from __sabaki.shudan import Goban
 import html2canvas__pro as html2canvas
 
+JS('import "@sabaki/shudan/css/goban.css"')
+JS('import "../css/main.css"')
+
 
 char_map = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -45,7 +48,9 @@ max = Math.max
 
 def create_two_way_checkbox(component):
 
-    def callback(state_key, text):
+    def callback(data):
+        state_key = data["state_key"]
+        text = data["text"]
         return h(
             "label",
             {
@@ -405,24 +410,24 @@ class App(Component):
                     "onClick": lambda: self._copy_move(document.getElementsByClassName("shudan-goban")[0]),
                 },
             ),
+        ),
+        h(
+            "div",
+            {},
             h(
-                "div",
-                {},
-                h(
-                    Goban,
-                    {
-                        "innerProps": {
-                            "onContextMenu": lambda evt: evt.preventDefault(),
-                        },
-                        "vertexSize": vertexSize,
-                        "animate": True,
-                        "signMap": self.state.board.signMap,
-                        "showCoordinates": showCoordinates,
-                        "fuzzyStonePlacement": True,
-                        "animateStonePlacement": True,
-                        "onVertexMouseUp": self._place_stone(board, players),
+                Goban,
+                {
+                    "innerProps": {
+                        "onContextMenu": lambda evt: evt.preventDefault(),
                     },
-                ),
+                    "vertexSize": vertexSize,
+                    "animate": True,
+                    "signMap": self.state.board.signMap,
+                    "showCoordinates": showCoordinates,
+                    "fuzzyStonePlacement": True,
+                    "animateStonePlacement": True,
+                    "onVertexMouseUp": self._place_stone(board, players),
+                },
             ),
         ),
     )
