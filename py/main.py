@@ -10,24 +10,10 @@ import __sabaki.go__board as GoBoard
 from __sabaki.shudan import Goban
 import html2canvas__pro as html2canvas
 
+from .utils import to_int, to_char
+
 JS('import "@sabaki/shudan/css/goban.css"')
 JS('import "../css/main.css"')
-
-
-char_map = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-def to_int(character: str) -> int:
-    """
-    a = 0; b = 1; c = 2; etc...
-    """
-    return char_map.indexOf(character)
-
-
-def to_char(number: int) -> str:
-    """
-    0 = a; 1 = b; 2 = c; etc...
-    """
-    return char_map[number]
 
 
 def match_regex(expression: str, search: str) -> List[str]:
@@ -95,11 +81,11 @@ class App(Component):
         game_hash = window.location.hash[1:]
 
         if game_hash:
-            board_size = to_int(game_hash[0])
-            game_mode = 1 if to_int(game_hash[1]) >= 10 else 0
-            max_players = to_int(game_hash[1]) - 10 if game_mode else 0
+            board_size = utils.to_int(game_hash[0])
+            game_mode = 1 if utils.to_int(game_hash[1]) >= 10 else 0
+            max_players = utils.to_int(game_hash[1]) - 10 if game_mode else 0
         else:
-            window.location.hash = "#" + to_char(board_size) + to_char(max_players + (10 if game_mode else 0))
+            window.location.hash = "#" + utils.to_char(board_size) + utils.to_char(max_players + (10 if game_mode else 0))
 
         self.state = {
             "board": GoBoard.fromDimensions(board_size),
@@ -118,9 +104,9 @@ class App(Component):
         moves = match_regex(r"[\-a-zA-Z]{3}", game_hash[2:])
         for i in range(len(moves)):
             move = moves[i]
-            player = to_int(move[0]) - 10
+            player = utils.to_int(move[0]) - 10
             if move != "---":
-                vtx = [to_int(move[1]), to_int(move[2])]
+                vtx = [utils.to_int(move[1]), utils.to_int(move[2])]
                 note, new_board, captures = self.move(self.state["board"], player + 1, vtx, game_mode)
                 self.setState({"board": new_board})
 
@@ -245,7 +231,7 @@ class App(Component):
 
         game_hash = window.location.hash
         if len(game_hash) < 4:
-            window.location.hash = "#" + to_char(board_size) + to_char(players + (10 if gamemode else 0))
+            window.location.hash = "#" + utils.to_char(board_size) + utils.to_char(players + (10 if gamemode else 0))
             if board_size != board.width:
                 self.setState({"board": GoBoard.fromDimensions(board_size)})
 
@@ -324,7 +310,7 @@ class App(Component):
                     {
                         "type": "button",
                         "title": "Reset",
-                        "onClick": lambda evt: self.setState(lambda s: {"players": to_int(window.location.hash[2])}),
+                        "onClick": lambda evt: self.setState(lambda s: {"players": utils.to_int(window.location.hash[2])}),
                     },
                     players,
                 ),
@@ -360,7 +346,7 @@ class App(Component):
                     {
                         "type": "button",
                         "title": "Reset",
-                        "onClick": lambda evt: self.setState(lambda s: {"boardSize": to_int(window.location.hash[1])}),
+                        "onClick": lambda evt: self.setState(lambda s: {"boardSize": utils.to_int(window.location.hash[1])}),
                     },
                     board_size,
                 ),
@@ -438,11 +424,11 @@ class App(Component):
             if evt.button != 0:
                 return
 
-            players_hash = to_int(window.location.hash[2])
+            players_hash = utils.to_int(window.location.hash[2])
             game_mode = 1 if players_hash >= 10 else 0
             moves = window.location.hash[3:]
             index = len(moves) - 3
-            player = to_int(moves[index]) - 10 if len(moves) else -1
+            player = utils.to_int(moves[index]) - 10 if len(moves) else -1
             player += 1
             if player >= players:
                 player = 0
@@ -456,7 +442,7 @@ class App(Component):
                 print(captures)
 
             self.setState({"board": new_board})
-            window.location.hash += to_char(player + 10) + to_char(vertex[0]) + to_char(vertex[1])
+            window.location.hash += utils.to_char(player + 10) + utils.to_char(vertex[0]) + utils.to_char(vertex[1])
 
         return callback
 

@@ -52,7 +52,7 @@ def build(bld):
     bld(
         name="webpack_bundle",
         rule="npm exec webpack build -- --entry ${SRC[1]} --config ${SRC[0]} --stats-error-details -o . --output-filename ${TGT} --mode development",
-        source=["webpack.config.js", "py/main.py", "css/main.css"],
+        source=["webpack.config.js", "py/main.py", "py/utils.py", "css/main.css"],
         target="bundle/dist.js",
         after=["install_node"],
         #after=["install_node", "compile_python"],
