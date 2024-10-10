@@ -36,37 +36,47 @@ def match_regex(expression: str, search: str) -> List[str]:
     reg = RegExp(expression, "g")
     return reg.exec(search) or ()
 
+def lappend(collection, value):
+    collection.push(value)
+
+min = Math.min
+max = Math.max
+
 
 def create_two_way_checkbox(component):
-    return lambda state_key, text: h(
-        "label",
-        {
-            "style": {
-                "display": "flex",
-                "alignItems": "center",
-            },
-        },
-        h(
-            "input",
+
+    def callback(state_key, text):
+        return h(
+            "label",
             {
                 "style": {
-                    "marginRight": ".5em",
-                },
-                "type": "checkbox",
-                "checked": component.state[state_key],
-                "onClick": lambda: component.setState(lambda s: {state_key: not s[state_key]}),
-            },
-        ),
-        h(
-            "span",
-            {
-                "style": {
-                    "userSelect": "none",
+                    "display": "flex",
+                    "alignItems": "center",
                 },
             },
-            text,
-        ),
-    )
+            h(
+                "input",
+                {
+                    "style": {
+                        "marginRight": ".5em",
+                    },
+                    "type": "checkbox",
+                    "checked": component.state[state_key],
+                    "onClick": lambda: component.setState(lambda s: {state_key: not s[state_key]}),
+                },
+            ),
+            h(
+                "span",
+                {
+                    "style": {
+                        "userSelect": "none",
+                    },
+                },
+                text,
+            ),
+        )
+
+    return callback
 
 
 class App(Component):
@@ -109,7 +119,116 @@ class App(Component):
                 note, new_board, captures = self.move(self.state["board"], player + 1, vtx, game_mode)
                 self.setState({"board": new_board})
 
-    def render(self):
+
+
+    def get_chain(self, board: GoBoard, vertex: Tuple[int, int], player: int) -> List[Tuple[int, int]]:
+        """
+        Get list of vertices that represent the whole connected group
+        """
+        chain = []
+        value = board.get(vertex)
+        if not value:
+            return chain
+
+        is_player = value == player
+        seen = Set()
+        queue = [vertex]
+        while len(queue):
+            vtx = queue.pop()
+
+            key = str(vtx)
+            if key in seen:
+                continue
+            seen.add(key)
+
+            val = board.get(vtx)
+            if not val:
+                continue
+
+            # If isPlayer then we want only colours of that player.
+            # Else we want any other colour that is not that player.
+            if (is_player and val != player) or (not is_player and val == player):
+                continue
+
+            lappend(chain, vtx)
+            for neighbour in self.get_neighbors(board, vtx):
+                lappend(queue, neighbour)
+
+        return chain
+
+    def get_neighbors(self, board: GoBoard, vertex: Tuple[int, int]) -> List[Tuple[int, int]]:
+        """
+        Collect stones around the given stone
+        """
+        neighbours = board.getNeighbors(vertex)
+
+        if self.state["gamemode"]:
+            # Normal game mode
+            return neighbours
+
+        # Borderless game mode. Neighbors cross the boundary between sides.
+        if vertex[0] == 0:
+            lappend(neighbours, [board.width-1, vertex[1]])
+        if vertex[1] == 0:
+            lappend(neighbours, [vertex[0], board.height-1])
+        if vertex[0] == board.width-1:
+            lappend(neighbours, [0, vertex[1]])
+        if vertex[1] == board.height-1:
+            lappend(neighbours, [vertex[0], 0])
+
+        return neighbours
+
+    def move(self, board: GoBoard, sign: int, vertex: Tuple[int, int]) -> Tuple[str, GoBoard, int]:
+        """
+        Apply move to the board
+        """
+        new_board = board
+        captures = 0
+        note = ""
+
+        if sign and board.get(vertex):
+            note = "Illegal move: stone exists"
+            return note, new_board, captures
+
+        if not sign:
+            new_board = board.set(vertex, 0)
+            return note, new_board, captures
+
+        new_board = new_board.set(vertex, sign)
+
+        to_remove = []
+        play_liberties = 0
+        for neighbour in self.get_neighbors(new_board, vertex):
+            value = new_board.get(neighbour)
+            if not value or value == sign:
+                play_liberties += 1
+                continue
+            chain = self.get_chain(new_board, neighbour, sign)
+            liberties = 0
+            for vtx in chain:
+                for space in self.get_neighbors(new_board, vtx):
+                    if not board.get(space):
+                        liberties += 1
+            if not liberties:
+                for vtx in chain:
+                    lappend(to_remove, vtx)
+
+        if not len(to_remove) and not play_liberties:
+            note = "Illegal move: self capture";
+            new_board = new_board.set(vertex, 0)
+            return note, new_board, captures
+
+        # Capture
+        for vtx in to_remove:
+            new_board = new_board.set(vtx, 0)
+            captures += 1
+
+        return note, new_board, captures
+
+    def render(self) -> None:
+        """
+        Build visual elements of the board on screen.
+        """
         board = self.state["board"]
         players = self.state["players"]
         gamemode = self.state["gamemode"]
@@ -226,7 +345,7 @@ class App(Component):
                     "button",
                     {
                         "type": "button",
-                        "onClick": lambda evt: self.setState(lambda s: {"boardSize": max(s.boardSize - 1, 4)}),
+                        "onClick": lambda evt: self.setState(lambda s: {"boardSize": max(s["boardSize"] - 1, 4)}),
                     },
                     "-"
                 ),
@@ -238,14 +357,14 @@ class App(Component):
                         "title": "Reset",
                         "onClick": lambda evt: self.setState(lambda s: {"boardSize": to_int(window.location.hash[1])}),
                     },
-                    boardSize,
+                    board_size,
                 ),
                 " ",
                 h(
                     "button",
                     {
                         "type": "button",
-                        "onClick": lambda evt: self.setState(lambda s: {"boardSize": min(s.boardSize + 1, 19), }),
+                        "onClick": lambda evt: self.setState(lambda s: {"boardSize": min(s["boardSize"] + 1, 19), }),
                     },
                     "+"
                 )
@@ -262,7 +381,7 @@ class App(Component):
                     "button",
                     {
                         "type": "button",
-                        "onClick": lambda evt: self.setState(lambda s: {"gamemode": 0 if s.gamemode else 1}),
+                        "onClick": lambda evt: self.setState(lambda s: {"gamemode": 0 if s["gamemode"] else 1}),
                     },
                     "Normal" if gamemode else "Borderless",
                 ),
@@ -301,36 +420,40 @@ class App(Component):
                         "showCoordinates": showCoordinates,
                         "fuzzyStonePlacement": True,
                         "animateStonePlacement": True,
-                        "onVertexMouseUp": self._place_stone,
+                        "onVertexMouseUp": self._place_stone(board, players),
                     },
                 ),
             ),
         ),
     )
 
-    def _place_stone(self, evt, vertex):
-        if evt.button != 0:
-            return
+    def _place_stone(self, board, players):
 
-        players = to_int(window.location.hash[2])
-        game_mode = 1 if players >= 10 else 0
-        moves = window.location.hash[3:]
-        index = len(moves) - 3
-        player = to_int(moves[index]) - 10 if len(moves) else -1
-        player += 1
-        if player >= self.state["players"]:
-            player = 0
+        def callback(evt, vertex):
+            if evt.button != 0:
+                return
 
-        note, new_board, captures = self.move(self.state["board"], player + 1, vertex, game_mode)
-        if note:
-            alert(note)
-            return
+            players_hash = to_int(window.location.hash[2])
+            game_mode = 1 if players_hash >= 10 else 0
+            moves = window.location.hash[3:]
+            index = len(moves) - 3
+            player = to_int(moves[index]) - 10 if len(moves) else -1
+            player += 1
+            if player >= players:
+                player = 0
 
-        if captures:
-            print(captures)
+            note, new_board, captures = self.move(board, player + 1, vertex, game_mode)
+            if note:
+                alert(note)
+                return
 
-        self.setState({"board": new_board})
-        window.location.hash += to_char(player + 10) + to_char(vertex[0]) + to_char(vertex[1])
+            if captures:
+                print(captures)
+
+            self.setState({"board": new_board})
+            window.location.hash += to_char(player + 10) + to_char(vertex[0]) + to_char(vertex[1])
+
+        return callback
 
     def _copy_move(self, element):
         def do_copy(canvas):
@@ -347,7 +470,7 @@ class App(Component):
             ]).then(lambda: alert("Copied"))
 
         html2canvas(
-            goban,
+            element,
             {
                 "windowWidth": 500,
                 "windowHeight": 500,
