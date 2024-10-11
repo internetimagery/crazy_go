@@ -1,6 +1,7 @@
 module.exports = {
     resolve: {
-      modules: ['build/node_modules']
+      modules: ['build/node_modules'],
+      extensions: [".py", "..."]
     },
     module: {
 	    rules: [

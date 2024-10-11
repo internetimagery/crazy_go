@@ -1,35 +1,15 @@
-#_ = __pragma__('js', '{}', 'import { h, render, Component } from "preact"')
-#_ = __pragma__('js', '{}', 'import GoBoard from "@sabaki/go-board"')
-#_ = __pragma__('js', '{}', 'import { Goban } from "@sabaki/shudan"')
-#_ = __pragma__('js', '{}', 'import html2canvas from "html2canvas-pro"')
-#_ = __pragma__('js', '{}', 'import "@sabaki/shudan/css/goban.css"')
-#_ = __pragma__('js', '{}', 'import "../css/main.css"')
-
 from preact import h, render, Component
 import __sabaki.go__board as GoBoard
 from __sabaki.shudan import Goban
 import html2canvas__pro as html2canvas
 
-from .utils import to_int, to_char
+from .utils import to_int, to_char, match_regex, lappend, min, max, copy_board
+from .rules import load_game_rule, MultiColourRules, BorderLessRules
 
+# Bundle other assets
 JS('import "@sabaki/shudan/css/goban.css"')
 JS('import "../css/main.css"')
 
-
-def match_regex(expression: str, search: str) -> List[str]:
-    """
-    Similar to...
-
-    >>> re.match(expression, search)
-    """
-    reg = RegExp(expression, "g")
-    return reg.exec(search) or ()
-
-def lappend(collection, value):
-    collection.push(value)
-
-min = Math.min
-max = Math.max
 
 
 def create_two_way_checkbox(component):
@@ -74,147 +54,36 @@ class App(Component):
 
     def __init__(self, props):
         super().__init__(props)
+        self.game_rules = [MultiColourRules(), BorderLessRules()]
 
-        board_size = 9
-        max_players = 2
-        game_mode = 1
+        rule_index = 0
+        current_rule = self.game_rules[rule_index]
+
         game_hash = window.location.hash[1:]
-
-        if game_hash:
-            board_size = utils.to_int(game_hash[0])
-            game_mode = 1 if utils.to_int(game_hash[1]) >= 10 else 0
-            max_players = utils.to_int(game_hash[1]) - 10 if game_mode else 0
+        if not game_hash:
+            window.location.hash = "#" + current_rule.save_game()
         else:
-            window.location.hash = "#" + utils.to_char(board_size) + utils.to_char(max_players + (10 if game_mode else 0))
+            rule_id = to_int(game_hash[0])
+            for i in range(len(self.game_rules)):
+                if rule_id == self.game_rules[i].get_id():
+                    current_rule = self.game_rules[i]
+                    current_rule.load_game(game_hash[1:])
+                    break
 
         self.state = {
-            "board": GoBoard.fromDimensions(board_size),
-            "boardSize": board_size,
+            "board": current_rule.board,
+            "boardSize": current_rule.board_meta["current"],
             "vertexSize": 24,
             "showCoordinates": False,
             "fuzzyStonePlacement": True,
             "animateStonePlacement": True,
             "isBusy": False,
-            "players": max_players,
-            "gamemode": game_mode,
+            "players": current_rule.player_meta["max"],
+            "gameRule": current_rule,
         }
 
         self.CheckBox = create_two_way_checkbox(self)
 
-        moves = match_regex(r"[\-a-zA-Z]{3}", game_hash[2:])
-        for i in range(len(moves)):
-            move = moves[i]
-            player = utils.to_int(move[0]) - 10
-            if move != "---":
-                vtx = [utils.to_int(move[1]), utils.to_int(move[2])]
-                note, new_board, captures = self.move(self.state["board"], player + 1, vtx, game_mode)
-                self.setState({"board": new_board})
-
-
-
-    def get_chain(self, board: GoBoard, vertex: Tuple[int, int], player: int) -> List[Tuple[int, int]]:
-        """
-        Get list of vertices that represent the whole connected group
-        """
-        chain = []
-        value = board.get(vertex)
-        if not value:
-            return chain
-
-        is_player = value == player
-        seen = Set()
-        queue = [vertex]
-        while len(queue):
-            vtx = queue.pop()
-
-            key = str(vtx)
-            if key in seen:
-                continue
-            seen.add(key)
-
-            val = board.get(vtx)
-            if not val:
-                continue
-
-            # If isPlayer then we want only colours of that player.
-            # Else we want any other colour that is not that player.
-            if (is_player and val != player) or (not is_player and val == player):
-                continue
-
-            lappend(chain, vtx)
-            for neighbour in self.get_neighbors(board, vtx):
-                lappend(queue, neighbour)
-
-        return chain
-
-    def get_neighbors(self, board: GoBoard, vertex: Tuple[int, int]) -> List[Tuple[int, int]]:
-        """
-        Collect stones around the given stone
-        """
-        neighbours = board.getNeighbors(vertex)
-
-        if self.state["gamemode"]:
-            # Normal game mode
-            return neighbours
-
-        # Borderless game mode. Neighbors cross the boundary between sides.
-        if vertex[0] == 0:
-            lappend(neighbours, [board.width-1, vertex[1]])
-        if vertex[1] == 0:
-            lappend(neighbours, [vertex[0], board.height-1])
-        if vertex[0] == board.width-1:
-            lappend(neighbours, [0, vertex[1]])
-        if vertex[1] == board.height-1:
-            lappend(neighbours, [vertex[0], 0])
-
-        return neighbours
-
-    def move(self, board: GoBoard, sign: int, vertex: Tuple[int, int]) -> Tuple[str, GoBoard, int]:
-        """
-        Apply move to the board
-        """
-        new_board = board
-        captures = 0
-        note = ""
-
-        if sign and board.get(vertex):
-            note = "Illegal move: stone exists"
-            return note, new_board, captures
-
-        if not sign:
-            new_board = board.set(vertex, 0)
-            return note, new_board, captures
-
-        new_board = new_board.set(vertex, sign)
-
-        to_remove = []
-        play_liberties = 0
-        for neighbour in self.get_neighbors(new_board, vertex):
-            value = new_board.get(neighbour)
-            if not value or value == sign:
-                play_liberties += 1
-                continue
-            chain = self.get_chain(new_board, neighbour, sign)
-            liberties = 0
-            for vtx in chain:
-                for space in self.get_neighbors(new_board, vtx):
-                    if not board.get(space):
-                        liberties += 1
-            if not liberties:
-                for vtx in chain:
-                    lappend(to_remove, vtx)
-
-        if not len(to_remove) and not play_liberties:
-            note = "Illegal move: self capture";
-            new_board = new_board.set(vertex, 0)
-            return note, new_board, captures
-
-        # Capture
-        for vtx in to_remove:
-            new_board = new_board.set(vtx, 0)
-            captures += 1
-
-        return note, new_board, captures
 
     def render(self) -> None:
         """
@@ -222,16 +91,18 @@ class App(Component):
         """
         board = self.state["board"]
         players = self.state["players"]
-        gamemode = self.state["gamemode"]
+        rule = self.state["gameRule"]
         board_size = self.state["boardSize"]
         vertexSize = self.state["vertexSize"]
         showCoordinates = self.state["showCoordinates"]
         fuzzyStonePlacement = self.state["fuzzyStonePlacement"]
         animateStonePlacement = self.state["animateStonePlacement"]
 
-        game_hash = window.location.hash
-        if len(game_hash) < 4:
-            window.location.hash = "#" + utils.to_char(board_size) + utils.to_char(players + (10 if gamemode else 0))
+        # Game has not started. GUI options still available...
+        if not len(rule.moves):
+            players = rule.set_num_players(players)
+            board_size = rule.set_board_size(board_size)
+            window.location.hash = "#" + rule.save_game()
             if board_size != board.width:
                 self.setState({"board": GoBoard.fromDimensions(board_size)})
 
@@ -300,7 +171,7 @@ class App(Component):
                     "button",
                     {
                         "type": "button",
-                        "onClick": lambda evt: self.setState(lambda s: {"players": max(s.players - 1, 2)}),
+                        "onClick": lambda evt: self.setState(lambda s: {"players": rule.set_num_players(s["players"] - 1)}),
                     },
                     "-"
                 ),
@@ -310,7 +181,7 @@ class App(Component):
                     {
                         "type": "button",
                         "title": "Reset",
-                        "onClick": lambda evt: self.setState(lambda s: {"players": utils.to_int(window.location.hash[2])}),
+                        "onClick": lambda evt: self.setState(lambda s: {"players": rule.player_meta["current"]}),
                     },
                     players,
                 ),
@@ -319,7 +190,7 @@ class App(Component):
                     "button",
                     {
                         "type": "button",
-                        "onClick": lambda evt: self.setState(lambda s: {"players": min(s.players + 1, 6), }),
+                        "onClick": lambda evt: self.setState(lambda s: {"players": rule.set_num_players(s["players"] + 1)}),
                     },
                     "+"
                 ),
@@ -336,7 +207,7 @@ class App(Component):
                     "button",
                     {
                         "type": "button",
-                        "onClick": lambda evt: self.setState(lambda s: {"boardSize": max(s["boardSize"] - 1, 4)}),
+                        "onClick": lambda evt: self.setState(lambda s: {"boardSize": rule.set_board_size(s["boardSize"] - 1)}),
                     },
                     "-"
                 ),
@@ -346,7 +217,7 @@ class App(Component):
                     {
                         "type": "button",
                         "title": "Reset",
-                        "onClick": lambda evt: self.setState(lambda s: {"boardSize": utils.to_int(window.location.hash[1])}),
+                        "onClick": lambda evt: self.setState(lambda s: {"boardSize": rule.board_meta["current"]}),
                     },
                     board_size,
                 ),
@@ -355,7 +226,7 @@ class App(Component):
                     "button",
                     {
                         "type": "button",
-                        "onClick": lambda evt: self.setState(lambda s: {"boardSize": min(s["boardSize"] + 1, 19), }),
+                        "onClick": lambda evt: self.setState(lambda s: {"boardSize": rule.set_board_size(s["boardSize"] + 1)}),
                     },
                     "+"
                 )
@@ -374,7 +245,7 @@ class App(Component):
                         "type": "button",
                         "onClick": lambda evt: self.setState(lambda s: {"gamemode": 0 if s["gamemode"] else 1}),
                     },
-                    "Normal" if gamemode else "Borderless",
+                    rule.get_name(),
                 ),
                 " ",
             ),
@@ -393,7 +264,7 @@ class App(Component):
                     },
                     "type": "button",
                     "value": "Copy Board",
-                    "onClick": lambda: self._copy_move(document.getElementsByClassName("shudan-goban")[0]),
+                    "onClick": lambda: copy_board(document.getElementsByClassName("shudan-goban")[0]),
                 },
             ),
         ),
@@ -424,11 +295,11 @@ class App(Component):
             if evt.button != 0:
                 return
 
-            players_hash = utils.to_int(window.location.hash[2])
+            players_hash = to_int(window.location.hash[2])
             game_mode = 1 if players_hash >= 10 else 0
             moves = window.location.hash[3:]
             index = len(moves) - 3
-            player = utils.to_int(moves[index]) - 10 if len(moves) else -1
+            player = to_int(moves[index]) - 10 if len(moves) else -1
             player += 1
             if player >= players:
                 player = 0
@@ -442,33 +313,9 @@ class App(Component):
                 print(captures)
 
             self.setState({"board": new_board})
-            window.location.hash += utils.to_char(player + 10) + utils.to_char(vertex[0]) + utils.to_char(vertex[1])
+            window.location.hash += to_char(player + 10) + to_char(vertex[0]) + to_char(vertex[1])
 
         return callback
-
-    def _copy_move(self, element):
-        def do_copy(canvas):
-            game_state = window.location.hash[1:]
-            data = canvas.toDataURL()
-            blob = Blob(
-                [f'<img src="{data}"><hr><code>{game_state}</code>'],
-                {"type":"text/html"},
-            )
-            navigator.clipboard.write([
-                ClipboardItem({
-                    "text/html": blob
-                })
-            ]).then(lambda: alert("Copied"))
-
-        html2canvas(
-            element,
-            {
-                "windowWidth": 500,
-                "windowHeight": 500,
-            },
-        ).then(do_copy)
-
-
 
 
 

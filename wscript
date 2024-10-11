@@ -39,23 +39,13 @@ def build(bld):
         after="copy_package",
     )
 
-    # Compile python
-    #bld(
-    #    name="compile_python",
-    #    rule="${PYTHON3} -m transcrypt --map --nomin --outdir ${TGT[0].abspath()} ${SRC}",
-    #    source="py/main.py",
-    #    target="compiled_python",
-    #    after="install_python",
-    #)
-
     # Bundle javascript and css
     bld(
         name="webpack_bundle",
-        rule="npm exec webpack build -- --entry ${SRC[1]} --config ${SRC[0]} --stats-error-details -o . --output-filename ${TGT} --mode development",
-        source=["webpack.config.js", "py/main.py", "py/utils.py", "css/main.css"],
+        rule="npm exec webpack build -- --entry ${SRC[-1]} --config ${SRC[-2]} --stats-error-details -o . --output-filename ${TGT} --mode development",
+        source=bld.path.ant_glob("py/*.py") + bld.path.ant_glob("css/*.css") + ["webpack.config.js", "py/main.py"],
         target="bundle/dist.js",
         after=["install_node"],
-        #after=["install_node", "compile_python"],
     )
 
     # Copy across static files
