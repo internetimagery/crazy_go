@@ -4,7 +4,8 @@ from __sabaki.shudan import Goban
 import html2canvas__pro as html2canvas
 
 from .utils import to_int, to_char, match_regex, lappend, min, max, copy_board
-from .rules import load_game_rule, MultiColourRules, BorderLessRules
+from .base_rules import Move
+from .rules import MultiColourRules, BorderLessRules
 
 # Bundle other assets
 JS('import "@sabaki/shudan/css/goban.css"')
@@ -79,7 +80,7 @@ class App(Component):
             "animateStonePlacement": True,
             "isBusy": False,
             "players": current_rule.player_meta["max"],
-            "gameRule": current_rule,
+            "ruleIndex": rule_index,
         }
 
         self.CheckBox = create_two_way_checkbox(self)
@@ -91,12 +92,14 @@ class App(Component):
         """
         board = self.state["board"]
         players = self.state["players"]
-        rule = self.state["gameRule"]
+        rule_index = self.state["ruleIndex"]
         board_size = self.state["boardSize"]
         vertexSize = self.state["vertexSize"]
         showCoordinates = self.state["showCoordinates"]
         fuzzyStonePlacement = self.state["fuzzyStonePlacement"]
         animateStonePlacement = self.state["animateStonePlacement"]
+
+        rule = self.game_rules[rule_index]
 
         # Game has not started. GUI options still available...
         if not len(rule.moves):
@@ -243,7 +246,9 @@ class App(Component):
                     "button",
                     {
                         "type": "button",
-                        "onClick": lambda evt: self.setState(lambda s: {"gamemode": 0 if s["gamemode"] else 1}),
+                        "onClick": lambda evt: self.setState(lambda s: {
+                            "ruleIndex": 0 if s["ruleIndex"] > len(self.game_rules) else s["ruleIndex"] + 1
+                        }),
                     },
                     rule.get_name(),
                 ),
@@ -283,28 +288,21 @@ class App(Component):
                     "showCoordinates": showCoordinates,
                     "fuzzyStonePlacement": True,
                     "animateStonePlacement": True,
-                    "onVertexMouseUp": self._place_stone(board, players),
+                    "onVertexMouseUp": self._place_stone(board, rule),
                 },
             ),
         ),
     )
 
-    def _place_stone(self, board, players):
+    def _place_stone(self, board, rule):
 
         def callback(evt, vertex):
             if evt.button != 0:
                 return
 
-            players_hash = to_int(window.location.hash[2])
-            game_mode = 1 if players_hash >= 10 else 0
-            moves = window.location.hash[3:]
-            index = len(moves) - 3
-            player = to_int(moves[index]) - 10 if len(moves) else -1
-            player += 1
-            if player >= players:
-                player = 0
+            move = Move(-1, vertex)
 
-            note, new_board, captures = self.move(board, player + 1, vertex, game_mode)
+            note, new_board, captures = rule.move(board, move)
             if note:
                 alert(note)
                 return
@@ -313,7 +311,7 @@ class App(Component):
                 print(captures)
 
             self.setState({"board": new_board})
-            window.location.hash += to_char(player + 10) + to_char(vertex[0]) + to_char(vertex[1])
+            window.location.hash = "#" + rule.save_game()
 
         return callback
 

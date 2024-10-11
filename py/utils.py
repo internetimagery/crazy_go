@@ -1,5 +1,5 @@
 
-__all__ = ("to_int", "to_char", "match_regex", "lappend", "min", "max", "copy_board", "RuntimeError")
+__all__ = ("to_int", "to_char", "match_regex", "lappend", "min", "max", "copy_board")
 
 
 char_map = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -62,5 +62,3 @@ def copy_board(board_element) -> None:
     ).then(do_copy)
 
 
-class RuntimeError(Exception):
-    pass
