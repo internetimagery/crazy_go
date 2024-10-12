@@ -1,7 +1,7 @@
 import __sabaki.go__board as GoBoard
 
-from .errors import NotImplementedError
-from .utils import to_int, to_char, lappend, match_regex, min, max
+from ..errors import NotImplementedError
+from ..utils import to_int, to_char, lappend, match_regex, min, max
 
 __all__ = ("BaseRules", "Move")
 

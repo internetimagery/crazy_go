@@ -43,7 +43,7 @@ def build(bld):
     bld(
         name="webpack_bundle",
         rule="npm exec webpack build -- --entry ${SRC[-1]} --config ${SRC[-2]} --stats-error-details -o . --output-filename ${TGT} --mode development",
-        source=bld.path.ant_glob("py/*.py") + bld.path.ant_glob("css/*.css") + ["webpack.config.js", "py/main.py"],
+        source=bld.path.ant_glob("py/**/*.py") + bld.path.ant_glob("css/*.css") + ["webpack.config.js", "py/main.py"],
         target="bundle/dist.js",
         after=["install_node"],
     )

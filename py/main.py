@@ -5,7 +5,8 @@ from __sabaki.shudan import Goban
 from .errors import InvalidMove
 from .utils import to_int, to_char, match_regex, lappend, min, max, copy_board
 from .rules.base import Move
-from .rules import MultiColourRules, BorderLessRules
+from .rules.multicolour import MultiColourRules
+from .rules.borderless import BorderLessRules
 from .components import button, plus_minus_button, checkbox
 
 # Bundle other assets
@@ -148,7 +149,12 @@ class App(Component):
             ),
             h(
                 "pre",
-                {},
+                {
+                    "style": {
+                        "position": "absolute",
+                        "bottom": "0px",
+                    },
+                },
                 rule.get_description(),
             ),
         )
