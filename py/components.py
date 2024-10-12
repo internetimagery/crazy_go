@@ -1,6 +1,6 @@
 from preact import h
 
-__all__ = ("button", "plus_minus_button")
+__all__ = ("button", "plus_minus_button", "checkbox")
 
 
 def button(label, value, press_func):
@@ -61,3 +61,36 @@ def plus_minus_button(label, state, minus_func, reset_func, plus_func):
             "+"
         ),
     )
+
+
+def checkbox(label, state, check_func):
+    return h(
+        "label",
+        {
+            "style": {
+                "display": "flex",
+                "alignItems": "center",
+            },
+        },
+        h(
+            "span",
+            {
+                "style": {
+                    "userSelect": "none",
+                },
+            },
+            label + ": ",
+        ),
+        h(
+            "input",
+            {
+                "style": {
+                    "marginRight": ".5em",
+                },
+                "type": "checkbox",
+                "checked": state,
+                "onClick": check_func,
+            },
+        ),
+    )
+

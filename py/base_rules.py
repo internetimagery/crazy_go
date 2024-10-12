@@ -15,6 +15,19 @@ class Move:
         self.vertex = vertex
         self.captures = captures
 
+
+    @classmethod
+    def fromStr(self, move: str) -> Move:
+        return Move(
+            to_int(move[0]),
+            (to_int(move[1]), to_int(move[2])),
+        )
+
+    def toStr(self) -> str:
+        return to_char(self.player) + to_char(self.vertex[0]) + to_char(self.vertex[1])
+
+
+
 class BaseRules:
     """
     Encapsulate game logic
@@ -49,7 +62,7 @@ class BaseRules:
         """
         if len(self.moves):
             next_player = self.moves[-1].player + 1
-            if next_player < self.player_meta["current"]:
+            if next_player <= self.player_meta["current"]:
                 return next_player
         return 1
 
@@ -69,10 +82,7 @@ class BaseRules:
 
         moves = match_regex(r"[a-zA-Z]{3}", game_hash[2:])
         for i in range(len(moves)):
-            move = Move(
-                to_int(moves[i][0]),
-                (to_int(moves[i][1]), to_int(moves[i][2])),
-            )
+            move = Move.fromStr(moves[i])
             self.move(move)
 
     def save_game(self) -> str:
@@ -81,7 +91,7 @@ class BaseRules:
         """
         meta_state = to_char(self.get_id()) + to_char(self.player_meta["current"]) + to_char(self.board_meta["current"])
         for move in self.moves:
-            meta_state += to_char(move["player"]) + to_char(move["vtx"][0]) + to_char(move["vtx"][1])
+            meta_state += move.toStr()
         return meta_state
 
     def set_num_players(self, players:int) -> int:

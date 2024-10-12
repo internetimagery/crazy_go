@@ -31,7 +31,7 @@ def match_regex(expression: str, search: str) -> List[str]:
         result = reg.exec(search)
         if not result:
             break
-        lappend(results, result)
+        lappend(results, result[0])
     return results
 
 

@@ -6,55 +6,13 @@ from .errors import InvalidMove
 from .utils import to_int, to_char, match_regex, lappend, min, max, copy_board
 from .base_rules import Move
 from .rules import MultiColourRules, BorderLessRules
-from .components import button, plus_minus_button
+from .components import button, plus_minus_button, checkbox
 
 # Bundle other assets
 JS('import "@sabaki/shudan/css/goban.css"')
 JS('import "../css/main.css"')
 
-
-
-
-
-
-
-
-def create_two_way_checkbox(component):
-
-    def callback(data):
-        state_key = data["state_key"]
-        text = data["text"]
-        return h(
-            "label",
-            {
-                "style": {
-                    "display": "flex",
-                    "alignItems": "center",
-                },
-            },
-            h(
-                "input",
-                {
-                    "style": {
-                        "marginRight": ".5em",
-                    },
-                    "type": "checkbox",
-                    "checked": component.state[state_key],
-                    "onClick": lambda: component.setState(lambda s: {state_key: not s[state_key]}),
-                },
-            ),
-            h(
-                "span",
-                {
-                    "style": {
-                        "userSelect": "none",
-                    },
-                },
-                text,
-            ),
-        )
-
-    return callback
+__all__ = ("start_app",)
 
 
 class App(Component):
@@ -88,8 +46,6 @@ class App(Component):
             "players": current_rule.player_meta["current"],
             "ruleIndex": rule_index,
         }
-
-        self.CheckBox = create_two_way_checkbox(self)
 
 
     def render(self) -> None:
@@ -160,12 +116,10 @@ class App(Component):
                     lambda evt: self.setState(lambda s: {"vertexSize": 24 }),
                     lambda evt: self.setState(lambda s: {"vertexSize": s.vertexSize + 4 }),
                 ),
-                h(
-                    self.CheckBox,
-                    {
-                        "stateKey": "showCoordinates",
-                        "text": "Show coordinates",
-                    },
+                checkbox(
+                    "Show Coordinates",
+                    showCoordinates,
+                    lambda: self.setState(lambda s: {"showCoordinates": not s["showCoordinates"]}),
                 ),
                 button(
                     "Copy Board",
@@ -188,13 +142,13 @@ class App(Component):
                         "showCoordinates": showCoordinates,
                         "fuzzyStonePlacement": True,
                         "animateStonePlacement": True,
-                        "onVertexMouseUp": self._place_stone(board, rule),
+                        "onVertexMouseUp": self._place_stone(rule),
                     },
                 ),
             ),
         )
 
-    def _place_stone(self, board, rule):
+    def _place_stone(self, rule):
 
         def callback(evt, vertex):
             if evt.button != 0:
@@ -214,5 +168,10 @@ class App(Component):
         return callback
 
 
+def start_app(element):
+    """
+    Kick off the application in the defined element
+    """
+    render(h(App), element)
 
-render(h(App), document.getElementById("root"))
+window.start_app = start_app
