@@ -99,14 +99,14 @@ class App(Component):
                     "Players",
                     players,
                     lambda evt: self.setState(lambda s: {"players": rule.set_num_players(s["players"] - 1)}),
-                    lambda evt: self.setState(lambda s: {"players": rule.player_meta["current"]}),
+                    lambda evt: self.setState(lambda s: {"players": rule.player_meta["default"]}),
                     lambda evt: self.setState(lambda s: {"players": rule.set_num_players(s["players"] + 1)}),
                 ),
                 plus_minus_button(
                     "Board Size",
                     board_size,
                     lambda evt: self.setState(lambda s: {"boardSize": rule.set_board_size(s["boardSize"] - 1)}),
-                    lambda evt: self.setState(lambda s: {"boardSize": rule.board_meta["current"]}),
+                    lambda evt: self.setState(lambda s: {"boardSize": rule.board_meta["default"]}),
                     lambda evt: self.setState(lambda s: {"boardSize": rule.set_board_size(s["boardSize"] + 1)}),
                 ),
                 plus_minus_button(
