@@ -82,13 +82,7 @@ class App(Component):
                 },
             },
             h(
-                "form",
-                {
-                    "style": {
-                        "display": "flex",
-                        "flexDirection": "column",
-                    },
-                },
+                "table", {},
                 button(
                     "Game Mode",
                     rule.get_name(),
@@ -151,8 +145,11 @@ class App(Component):
                 "pre",
                 {
                     "style": {
+                        "text-align": "center",
                         "position": "absolute",
                         "bottom": "0px",
+                        "left": "0px",
+                        "right": "0px",
                     },
                 },
                 rule.get_description(),
