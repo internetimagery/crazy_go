@@ -2,7 +2,7 @@ import __sabaki.go__board as GoBoard
 
 from .errors import InvalidMove
 from .utils import lappend
-from .base_rules import BaseRules, Move
+from .base import BaseRules, Move
 
 
 __all__ = ("MultiColourRules", "BorderLessRules")
@@ -18,6 +18,12 @@ class MultiColourRules(BaseRules):
 
     def get_name(self) -> str:
         return "Normal"
+
+    def get_description(self) -> str:
+        return """
+        Regular Go. But with an option to play multicolour/multiplayer.
+        In three or more player games, opponents connected count as one group.
+        """
 
     def move(self, move: Move) -> None:
         """
@@ -81,6 +87,11 @@ class BorderLessRules(MultiColourRules):
 
     def get_name(self) -> str:
         return "Borderless"
+
+    def get_description(self) -> str:
+        return """
+        Go, with no borders. Instead of hitting a boarder, you wrap around.
+        """
 
     def get_neighbors(self, board: GoBoard, vertex: Tuple[int, int]) -> List[Tuple[int, int]]:
         """

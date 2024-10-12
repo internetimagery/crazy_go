@@ -50,6 +50,12 @@ class BaseRules:
         """
         raise NotImplementedError("Override this")
 
+    def get_description(self) -> str:
+        """
+        Description visible on screen
+        """
+        raise NotImplementedError("Override this")
+
     def move(self, move: Move) -> None:
         """
         Make a move in the game

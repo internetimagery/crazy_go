@@ -4,7 +4,7 @@ from __sabaki.shudan import Goban
 
 from .errors import InvalidMove
 from .utils import to_int, to_char, match_regex, lappend, min, max, copy_board
-from .base_rules import Move
+from .rules.base import Move
 from .rules import MultiColourRules, BorderLessRules
 from .components import button, plus_minus_button, checkbox
 
@@ -145,6 +145,11 @@ class App(Component):
                         "onVertexMouseUp": self._place_stone(rule),
                     },
                 ),
+            ),
+            h(
+                "pre",
+                {},
+                rule.get_description(),
             ),
         )
 
