@@ -1,3 +1,4 @@
+import html2canvas__pro as html2canvas
 
 __all__ = ("to_int", "to_char", "match_regex", "lappend", "min", "max", "copy_board")
 
@@ -25,7 +26,13 @@ def match_regex(expression: str, search: str) -> List[str]:
     >>> re.match(expression, search)
     """
     reg = RegExp(expression, "g")
-    return reg.exec(search) or ()
+    results = []
+    while True:
+        result = reg.exec(search)
+        if not result:
+            break
+        lappend(results, result)
+    return results
 
 
 def lappend(collection: List[T], value: T) -> None:

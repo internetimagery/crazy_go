@@ -19,22 +19,17 @@ class MultiColourRules(BaseRules):
     def get_name(self) -> str:
         return "Normal"
 
-    def move(self, board: GoBoard, move: Move) -> None:
+    def move(self, move: Move) -> None:
         """
         Apply move to the board
         Player zero is empty space.
         """
-        new_board = board
+        board = self.board
+        new_board = self.board
         captures = 0
-        note = ""
 
         vertex = move.vertex
-
-        player = 1
-        if len(self.moves):
-            next_player = self.moves[-1]["player"] + 1
-            if next_player < self.player_meta["max"]:
-                player = next_player
+        player = move.player
 
         if player and board.get(vertex):
             raise InvalidMove("Illegal move: stone exists")
@@ -47,7 +42,8 @@ class MultiColourRules(BaseRules):
             new_board = board.set(vertex, 0)
             move = {"player": player, "vtx": vertex}
             lappend(self.moves, move)
-            return move
+            self.board = new_board
+            return
 
         new_board = new_board.set(vertex, player)
 
@@ -69,16 +65,17 @@ class MultiColourRules(BaseRules):
                     lappend(to_remove, vtx)
 
         if not len(to_remove) and not play_liberties:
-            note = "Illegal move: self capture";
+            raise InvalidMove("Illegal move: self capture")
             new_board = new_board.set(vertex, 0)
-            return note, new_board, captures
+            self.board = new_board
+            return
 
         # Capture
         for vtx in to_remove:
             new_board = new_board.set(vtx, 0)
             captures += 1
 
-        return note, new_board, captures
+        self.board = new_board
 
 
 class BorderLessRules(MultiColourRules):

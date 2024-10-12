@@ -37,6 +37,22 @@ class BaseRules:
         """
         raise NotImplementedError("Override this")
 
+    def move(self, move: Move) -> None:
+        """
+        Make a move in the game
+        """
+        raise NotImplementedError("Override this")
+
+    def get_next_player(self) -> int:
+        """
+        Get player that is going next
+        """
+        if len(self.moves):
+            next_player = self.moves[-1].player + 1
+            if next_player < self.player_meta["current"]:
+                return next_player
+        return 1
+
     def load_game(self, game_hash: str) -> None:
         """
         Load game data to url hash
@@ -57,9 +73,7 @@ class BaseRules:
                 to_int(moves[i][0]),
                 (to_int(moves[i][1]), to_int(moves[i][2])),
             )
-            lappend(self.moves, move)
-            note, new_board, captures = self.move(self.board, move)
-            self.board = new_board
+            self.move(move)
 
     def save_game(self) -> str:
         """
@@ -83,9 +97,6 @@ class BaseRules:
         """
         self.board_meta["current"] = min(self.board_meta["max"], max(self.board_meta["min"], size))
         return self.board_meta["current"]
-
-    def move(self, board: GoBoard, sign: int, vertex: Tuple[int, int]) -> Tuple[str, GoBoard, int]:
-        raise NotImplementedError("Need to provide some logic")
 
     def get_chain(self, board: GoBoard, vertex: Tuple[int, int], player: int) -> List[Tuple[int, int]]:
         """
